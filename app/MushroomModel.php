@@ -11,7 +11,7 @@ class MushroomModel extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'mr_prgid', 'mr_size', 'mr_imgid', 'mr_status', 'mr_growthrate'
+        'mr_prgid', 'mr_size', 'mr_imgid', 'mr_status', 'mr_growthrate', 'mr_date'
     ];
 
     public function programs() {

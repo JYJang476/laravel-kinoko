@@ -122,44 +122,40 @@ class MachineController extends Controller
     // 가동 상태 설정
     function GetIsOn(Request $request) {
         $validator = Validator::make($request->all(),[
-            "token" => "required"
+            "id" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $user = UserModel::where('token', '=', $request->token)->first();
+        // 해당 유저 아이디로 기기와 조인해서 정보를 얻어온다.
+        $result = MachineModel::where('id', '=', $request->id)->first();
 
-        if(!$user)
-            return response('토큰에 해당하는 유저가 없습니다.', 404);
-
-        $result = UserModel::join('Machines', 'Users.user_machineid', 'Machines.id')->first();
-
+        // 없다면 404 에러
         if(!$result)
             return response('해당 데이터가 없습니다.', 404);
 
+        // 문제 없다면 해당 유저 기기의 가동 상태를 반환
         return response($result->machine_ison, 200);
     }
 
     // 배지 유무 설정
     function GetIsPresence(Request $request) {
         $validator = Validator::make($request->all(),[
-            "token" => "required"
+            "id" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $user = UserModel::where('token', '=', $request->token)->first();
+        // 해당 유저 아이디로 기기와 조인해서 정보를 얻어온다.
+        $result = MachineModel::where('id', '=', $request->id)->first();
 
-        if(!$user)
-            return response('토큰에 해당하는 유저가 없습니다.', 404);
-
-        $result = UserModel::join('Machines', 'Users.user_machineid', 'Machines.id')->first();
-
+        // 없다면 404 에러
         if(!$result)
             return response('해당 데이터가 없습니다.', 404);
 
+        // 문제 없다면 해당 유저 기기의 가동 상태를 반환
         return response($result->machine_ispresence, 200);
     }
 
@@ -196,19 +192,15 @@ class MachineController extends Controller
 //
 //        if($validator->fails())
 //            return response($validator->errors(), 400);
-
         $result = MachineModel::select('Machines.machine_userid', 'Pins.pin_value', 'Pins.pin_pw')
             ->join('Pins', 'Machines.machine_pin', '=', 'Pins.pin_value')
             ->where('Pins.pin_value', '=', $request->pin)->first();
 
         $user = UserModel::where('user_id', '=', $request->userId)->first();
-
         if(!$user)
             return response("해당 유저가 없습니다", 404);
-
         if($result->pin_pw != $request->pw)
             return response("비밀번호 인증 실패", 401);
-
         if($result->machine_userid != 1)
             return response('이미 등록된 기기', 404);
 
@@ -219,6 +211,7 @@ class MachineController extends Controller
 
         return response($result->machine_ip, 200);
     }
+
     function GetMachine(Request $request) {
         // 프로그램 이름, 온/습/생장, 배지 이름,
         $validator = Validator::make($request->all(),[
@@ -228,7 +221,8 @@ class MachineController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $machine = MachineModel::select('Programs.id', 'Programs.prg_name')->join('Programs', 'Machines.machine_prgid', '=', 'Programs.id')
+        $machine = MachineModel::select('Programs.id', 'Programs.prg_name')
+            ->join('Programs', 'Machines.machine_prgid', '=', 'Programs.id')
             ->where('Machines.id', '=', $request->input('id'));
 
         if($machine->count() == 0)

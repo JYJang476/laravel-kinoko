@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GrowthRateModel extends Model
 {
-    protected $table = 'Growth_rates';
+    protected $table = 'Growth_Rates';
     protected $primaryKey = 'id';
 
     protected $fillable = [

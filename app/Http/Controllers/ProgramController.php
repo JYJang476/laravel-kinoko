@@ -12,7 +12,6 @@ use App\Http\Controllers\MachineController;
 use Validator;
 
 use Illuminate\Http\Request;
-use function foo\func;
 
 class ProgramController extends Controller
 {
@@ -42,7 +41,7 @@ class ProgramController extends Controller
         $humidity = $humidity->where('Setting_datas.setting_type', 'humidity')
             ->select('setting_type', 'setting_value', 'setting_date')->get();
 
-        $growthRate = ProgramModel::join('Growth_rates', 'Programs.id', '=', 'Growth_rates.gr_prgid')
+        $growthRate = ProgramModel::join('Growth_Rates', 'Programs.id', '=', 'Growth_Rates.gr_prgid')
             ->where('Programs.id',  $request->id);
 
         $growthRate = $growthRate
@@ -57,7 +56,8 @@ class ProgramController extends Controller
 
     private function GetProgramList($type) {
 
-        $customs = ProgramModel::select('id', 'prg_name', 'prg_count')
+        $customs = ProgramModel::select('id', 'prg_name', 'prg_count',
+            'prg_water', 'prg_sunshine')
             ->where('prg_type', $type);
 
         return $customs;
@@ -82,6 +82,8 @@ class ProgramController extends Controller
                 'id' => $custom->id,
                 'prg_name' => $custom->prg_name,
                 'prg_count' => $custom->prg_count,
+                'prg_water' => $custom->prg_water,
+                'prg_sunshine' => $custom->prg_sunshine,
                 'temperature' => $temps->toArray(),
                 'humidity' => $humi->toArray(),
                 'growthRate' => $growth->toArray()
@@ -106,6 +108,23 @@ class ProgramController extends Controller
             return response('변경 실패', 403);
 
         return response('변경 성공', 200);
+    }
+
+    public function GetStartDate(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "id" => "required",
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        $program = ProgramModel::join('Dates', 'Programs.prg_dateid', 'Dates.id')
+            ->where('Programs.id', '=', $request->id)->first();
+
+        if(!$program)
+            return response('해당 데이터를 찾지 못했습니다.', 404);
+
+        return response($program->first()->date_start, 200);
     }
 
     public function AddCustomProgram(Request $request) {
@@ -175,6 +194,21 @@ class ProgramController extends Controller
         return response("성공", 200);
     }
 
+    public function GetCompostName(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "id" => "required",
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        $result = ProgramModel::where('id', '=', $request->id)->first();
+
+        if(!$result)
+            return response('해당 데이터 없음', 404);
+
+        return response($result->first()->prg_compostname, 200);
+    }
 
     public function ExtendCustomPeriod(Request $request) {
         // 기간, 기간분의 데이터(Array), 프로그램 id, 유저 id
