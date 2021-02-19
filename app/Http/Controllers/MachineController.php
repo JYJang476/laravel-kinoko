@@ -172,8 +172,16 @@ class MachineController extends Controller
     }
 
     function DeleteMachine(Request $request) {
-        $result = MachineModel::where('id', $request->id)->update([
+        $machine = MachineModel::where('id', $request->id);
+
+        $userId = $machine->first()->machine_userid;
+
+        $result = $machine->update([
             "machine_userid" => 1
+        ]);
+
+        UserModel::where('id', '=', $userId)->update([
+            'user_machineid' => 0
         ]);
 
         if(!$result)

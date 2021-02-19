@@ -21,13 +21,3 @@ Route::get('/hello', function () {
     return view('welcome');
 });
 
-Route::post('/api/auth', 'UserController@CheckLogin');
-
-Route::post('/api/register', 'UserController@RegisterUser');
-
-Route::post('/api/login', 'UserController@LoginUser');
-
-Route::put('/api/logout', 'UserController@LogoutUser');
-
-Route::get('/api/date/logout/{id}', 'UserController@GetLogoutDate');
-

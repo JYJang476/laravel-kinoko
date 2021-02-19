@@ -42,12 +42,17 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::select('user_machineid')->where('token', '=', $request->token)->first();
+        $result = UserModel::select('Users.user_machineid', 'Machines.machine_name')
+                            ->join('Machines', 'Users.user_machineid', 'Machines.id')
+                            ->where('Users.token', '=', $request->token)->first();
 
         if(!$result)
             return response('일치하는 결과 없음', 404);
 
-        return response($result->user_machineid, 200);
+        return response([
+            'id' => $result->user_machineid,
+            'name' => $result->machine_name
+        ], 200);
     }
 
     function SelectMachine(Request $request) {
@@ -59,17 +64,20 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::where('token', '=', $request->token)
-            ->update([
+        $result = UserModel::where('token', '=', $request->token)->update([
                 'user_machineid' => $request->id
             ]);
+
+        return response([
+            "result" => $result
+        ]);
 
         if(!$result)
             return response('기기 선택 실패', 403);
 
         return response('기기 선택 성공', 200);
     }
-    
+
     function CheckRegister($id) {
         $result = UserModel::where('user_id', $id);
 

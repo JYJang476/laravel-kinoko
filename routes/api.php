@@ -55,3 +55,10 @@ Route::post('login', 'UserController@LoginUser');
 Route::put('logout', 'UserController@LogoutUser');
 
 Route::get('logout/date', 'UserController@GetLogoutDate');
+
+Route::get('myfarm/data/hour', 'SettingController@GetDataToHour');
+
+Route::post('image/upload', 'MushroomImageController@UploadImage');
+Route::get('img/{id}', 'MushroomImageController@GetImage');
+
+

@@ -35,11 +35,11 @@ class ProgramController extends Controller
 
         $temperature = clone $table;
         $temperature = $temperature->where('Setting_datas.setting_type', 'temperature')
-            ->select('setting_type', 'setting_value', 'setting_date')->get();
+            ->select('setting_type', 'setting_value', 'setting_date')->orderBy('setting_date')->get();
 
         $humidity = clone $table;
         $humidity = $humidity->where('Setting_datas.setting_type', 'humidity')
-            ->select('setting_type', 'setting_value', 'setting_date')->get();
+            ->select('setting_type', 'setting_value', 'setting_date')->orderBy('setting_date')->get();
 
         $growthRate = ProgramModel::join('Growth_Rates', 'Programs.id', '=', 'Growth_Rates.gr_prgid')
             ->where('Programs.id',  $request->id);
@@ -48,10 +48,10 @@ class ProgramController extends Controller
             ->select('gr_value')->get();
 
         return response([
-            'temperature' => $temperature->toArray(),
-            'humidity' => $humidity->toArray(),
-            'growthRate' => $growthRate->toArray()
-        ], 201);
+            'temperature' => $temperature,
+            'humidity' => $humidity,
+            'growthRate' => $growthRate
+        ], 200);
     }
 
     private function GetProgramList($type) {
@@ -69,12 +69,14 @@ class ProgramController extends Controller
             $temps = SettingModel::select('setting_value', 'setting_date')->where([
                 'setting_prgid' => $custom->id,
                 'setting_type' => 'temperature'
-            ])->get();
+            ])->groupByRaw('setting_type, DAY(setting_date)')
+                ->orderBy('setting_date')->get();
 
             $humi = SettingModel::select('setting_value', 'setting_date')->where([
                 'setting_prgid' => $custom->id,
                 'setting_type' => 'humidity'
-            ])->get();
+            ])->groupByRaw('setting_type, DAY(setting_date)')
+                ->orderBy('setting_date')->get();
 
             $growth = GrowthRateModel::select('gr_value')->where('gr_prgid', '=', $custom->id)->get();
 
@@ -84,9 +86,9 @@ class ProgramController extends Controller
                 'prg_count' => $custom->prg_count,
                 'prg_water' => $custom->prg_water,
                 'prg_sunshine' => $custom->prg_sunshine,
-                'temperature' => $temps->toArray(),
-                'humidity' => $humi->toArray(),
-                'growthRate' => $growth->toArray()
+                'temperature' => $temps,
+                'humidity' => $humi,
+                'growthRate' => $growth
             ];
         });
 
