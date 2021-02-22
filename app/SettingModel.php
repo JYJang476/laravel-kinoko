@@ -8,6 +8,7 @@ class SettingModel extends Model
 {
     protected $table = 'Setting_datas';
     protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'setting_prgid', 'setting_value', 'setting_type', 'setting_date'

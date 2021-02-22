@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\DataModel;
 use App\GrowthRateModel;
-use App\UserModel;
 use Illuminate\Http\Request;
-use App\SettingModel;
-use Illuminate\Support\Facades\DB;
 use Validator;
 
-class SettingController extends Controller
+class DataController extends Controller
 {
     function GetDataToLastlogout(Request $request) {
         $validator = Validator::make($request->all(),[
@@ -21,15 +19,15 @@ class SettingController extends Controller
             return response($validator->errors(), 400);
 
         // 유저 아이디로 마지막 로그인 날짜 획득
-        $tempArray = SettingModel::whereRaw(
-            'setting_type="temperature" and setting_prgid=? and setting_date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [
+        $tempArray = DataModel::select('value', 'date')->whereRaw(
+            'type="temperature" and prgid=? and date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [
             $request->prgId,
             $request->date])->orderBy('setting_date')->get();
 
-        $humiArray = SettingModel::whereRaw(
-            'setting_type="humidity" and setting_prgid=? and setting_date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [
+        $humiArray = DataModel::select('value', 'date')->whereRaw(
+            'type="humidity" and prgid=? and date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [
             $request->prgId,
-            $request->date])->orderBy('setting_date')->get();
+            $request->date])->orderBy('date')->get();
 
         return response([
             "temperature" => $tempArray,
@@ -45,20 +43,21 @@ class SettingController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $settingTable = SettingModel::select('setting_prgid', 'setting_value', 'setting_type', 'setting_date');
-        $growthTable = GrowthRateModel::where('gr_prgid', '=', $request->prgId);
+        $settingTable = DataModel::select('value', 'date');
+        $growthTable = GrowthRateModel::select('gr_value')
+                        ->where('gr_prgid', '=', $request->prgId);
 
         $tempTable =  clone $settingTable;
         $tempArray = $tempTable->where([
-            'setting_prgid' => $request->prgId,
-            'setting_type' => 'temperature'
-        ])->orderBy('setting_date')->get();
+            'prgid' => $request->prgId,
+            'type' => 'temperature'
+        ])->orderBy('date')->get();
 
         $humiTable =  clone $settingTable;
         $humiArray = $humiTable->where([
-            'setting_prgid' => $request->prgId,
-            'setting_type' => 'humidity'
-        ])->orderBy('setting_date')->get();
+            'prgid' => $request->prgId,
+            'type' => 'humidity'
+        ])->orderBy('date')->get();
 
         return response([
             'growthRate' => $growthTable->get(),

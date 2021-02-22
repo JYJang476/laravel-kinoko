@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\TokenModel;
 use App\User;
 use Illuminate\Http\Request;
 use App\UserModel;
@@ -41,12 +42,12 @@ class UserController extends Controller
 
         if($validator->fails())
             return response($validator->errors(), 400);
+        $userid = TokenModel::where('token', '=', $request->token)->first()->user_no;
 
-        $result = UserModel::select('Users.user_machineid', 'Machines.machine_name')
+        $result = UserModel::select('Users.id', 'Users.user_machineid', 'Machines.machine_name')
                             ->join('Machines', 'Users.user_machineid', 'Machines.id')
-                            ->where('Users.token', '=', $request->token)->first();
-
-        if(!$result)
+                            ->where('Users.id', '=', $userid)->first();
+        if($result == null)
             return response('일치하는 결과 없음', 404);
 
         return response([
@@ -57,20 +58,17 @@ class UserController extends Controller
 
     function SelectMachine(Request $request) {
         $validator = Validator::make($request->all(),[
-            "id" => "required",
-            "token" => "required"
+            "id" => "required", // 기기 아이디
+            "token" => "required" // 토큰
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::where('token', '=', $request->token)->update([
+        $result = UserModel::where('token', '=', $request->token)
+            ->update([
                 'user_machineid' => $request->id
             ]);
-
-        return response([
-            "result" => $result
-        ]);
 
         if(!$result)
             return response('기기 선택 실패', 403);
@@ -96,16 +94,21 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $user = UserModel::select('user_id', 'token')->where('user_id', $request->id);
-
-        if($user->first()->token != null)
-            return response('이미 로그인 되어있습니다.', 401);
+        $user = UserModel::select('id', 'user_id')->where('user_id', $request->id)->first();
 
         if($user->count() == 0)
             return response("계정 정보를 확인해주세요", 401);
         else {
-            $user->update(['token' => $request->token]);
-            return response('로그인 성공', 200);
+            $result = TokenModel::where('user_no', '=', $user->id)->first();
+
+            if($result != null)
+                return response('이미 로그인 되어있습니다.', 403);
+
+            TokenModel::insert([
+                'user_no' => $user->id,
+                'token' => $request->token
+            ]);
+            return response('로그인 성공', 201);
         }
     }
 
@@ -133,13 +136,18 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $user = UserModel::where('token', $request->token);
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)->first();
 
-        if ($user->count() == 0)
+        if ($user == null)
             return response('이미 로그아웃 되었거나 잘못된 토큰', 403);
 
+        $result = TokenModel::where('token', '=', $request->token)->delete();
+
+        if(!$result)
+            return response('토큰 삭제 실패', 403);
+
         $user->update([
-            'token' => null,
             'user_lastlogout' => \Carbon\Carbon::now()
         ]);
 
@@ -151,7 +159,8 @@ class UserController extends Controller
             "token" => "required"
         ]);
 
-        $user = UserModel::where('token', '=', $request->token)->first();
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)->first();
 
         return $user->user_machineid;
     }
@@ -167,18 +176,20 @@ class UserController extends Controller
 
     function GetLogoutDate(Request $request) {
         $validator = Validator::make($request->all(),[
-            "id" => "required"
+            "id" => "required",
+            "token" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::where('user_id', $request->id);
+        $user = UserModel::select('Users.id', 'Users.user_lastlogout', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)->first();
 
-        if($result->count() == 0)
+        if($user == null)
             return response('일치하는 계정이 없습니다.', 404);
-        else if($result->first()->user_lastlogout == null)
+        else if($user->user_lastlogout == null)
             return response('로그인 한 적이 없는 계정입니다.', 404);
-        return response($result->first()->user_lastlogout, 200);
+        return response($user->user_lastlogout, 200);
     }
 }

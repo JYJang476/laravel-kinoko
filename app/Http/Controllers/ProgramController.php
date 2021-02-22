@@ -9,6 +9,8 @@ use App\MachineModel;
 use App\ProgramModel;
 use App\SettingModel;
 use App\Http\Controllers\MachineController;
+use App\UserModel;
+use Carbon\Carbon;
 use Validator;
 
 use Illuminate\Http\Request;
@@ -26,7 +28,8 @@ class ProgramController extends Controller
             return response($validator->errors(), 400);
 
         $table = ProgramModel::join('Setting_datas', 'Programs.id', '=', 'Setting_datas.setting_prgid')
-            ->where(['prg_type' => $request->type,
+            ->where([
+                'prg_type' => $request->type,
                 'Programs.id' => $request->id
             ]);
 
@@ -35,11 +38,11 @@ class ProgramController extends Controller
 
         $temperature = clone $table;
         $temperature = $temperature->where('Setting_datas.setting_type', 'temperature')
-            ->select('setting_type', 'setting_value', 'setting_date')->orderBy('setting_date')->get();
+            ->select('setting_value', 'setting_date')->orderBy('setting_date')->get();
 
         $humidity = clone $table;
         $humidity = $humidity->where('Setting_datas.setting_type', 'humidity')
-            ->select('setting_type', 'setting_value', 'setting_date')->orderBy('setting_date')->get();
+            ->select('setting_value', 'setting_date')->orderBy('setting_date')->get();
 
         $growthRate = ProgramModel::join('Growth_Rates', 'Programs.id', '=', 'Growth_Rates.gr_prgid')
             ->where('Programs.id',  $request->id);
@@ -48,6 +51,8 @@ class ProgramController extends Controller
             ->select('gr_value')->get();
 
         return response([
+            'water' => $table->first()->prg_water,
+            'sunshine' => $table->first()->prg_sunshine,
             'temperature' => $temperature,
             'humidity' => $humidity,
             'growthRate' => $growthRate
@@ -69,14 +74,12 @@ class ProgramController extends Controller
             $temps = SettingModel::select('setting_value', 'setting_date')->where([
                 'setting_prgid' => $custom->id,
                 'setting_type' => 'temperature'
-            ])->groupByRaw('setting_type, DAY(setting_date)')
-                ->orderBy('setting_date')->get();
+            ])->orderBy('setting_date')->get();
 
             $humi = SettingModel::select('setting_value', 'setting_date')->where([
                 'setting_prgid' => $custom->id,
                 'setting_type' => 'humidity'
-            ])->groupByRaw('setting_type, DAY(setting_date)')
-                ->orderBy('setting_date')->get();
+            ])->orderBy('setting_date')->get();
 
             $growth = GrowthRateModel::select('gr_value')->where('gr_prgid', '=', $custom->id)->get();
 
@@ -86,9 +89,9 @@ class ProgramController extends Controller
                 'prg_count' => $custom->prg_count,
                 'prg_water' => $custom->prg_water,
                 'prg_sunshine' => $custom->prg_sunshine,
-                'temperature' => $temps,
-                'humidity' => $humi,
-                'growthRate' => $growth
+                'temperature' => $temps->toArray(),
+                'humidity' => $humi->toArray(),
+                'growthRate' => $growth->toArray()
             ];
         });
 
@@ -123,10 +126,10 @@ class ProgramController extends Controller
         $program = ProgramModel::join('Dates', 'Programs.prg_dateid', 'Dates.id')
             ->where('Programs.id', '=', $request->id)->first();
 
-        if(!$program)
+        if($program == null)
             return response('해당 데이터를 찾지 못했습니다.', 404);
 
-        return response($program->first()->date_start, 200);
+        return response($program->date_start, 200);
     }
 
     public function AddCustomProgram(Request $request) {
@@ -219,12 +222,16 @@ class ProgramController extends Controller
             "value" => "required",
             "tempDate" => "required",
             "humiDate" => "required",
-            "period" => "required",
-            "userid" => "required"
+            "period" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
+
+        $token = $request->cookie('token');
+
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $token)->first();
 
         for($i = 0; $i < $request->period; $i++) {
             // 온도
@@ -243,7 +250,7 @@ class ProgramController extends Controller
             ]);
             // 생장률
             GrowthRateModel::insert([
-                'gr_userid' => $request->userid,
+                'gr_userid' => $user->id,
                 'gr_prgid' => $request->id,
                 'gr_value' => 0
             ]);
@@ -261,7 +268,7 @@ class ProgramController extends Controller
 
     public function DeleteCustomProgram(Request $request) {
         $validator = Validator::make($request->all(),[
-            "id" => "required"
+            "id" => "required" // 프로그램 아이디
         ]);
 
         if($validator->fails())
@@ -271,6 +278,10 @@ class ProgramController extends Controller
 
         if(!$result)
             return response('실패', 403);
+
+        MachineModel::where('machine_prgid', '=', $request->id)->update([
+           "machine_prgid" => 0
+        ]);
 
         return response('성공', 200);
     }
@@ -292,4 +303,6 @@ class ProgramController extends Controller
     public function AddProgramData(Request $request) {
 
     }
+
+
 }

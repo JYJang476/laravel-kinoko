@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\SettingModel;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\MachineModel;
 use App\ProgramModel;
@@ -48,6 +50,15 @@ class MachineController extends Controller
         return response("성공", 201);
     }
 
+    public function IsExist(Request $request) {
+        $result = MachineModel::where('machine_pin', '=', $request->pin)->first();
+
+        if($result->machine_prgid == null)
+            return response('false', 201);
+
+        return response($result->machine_prgid, 200);
+    }
+
     // 기기의 사용 프로그램 설정
     function SetProgram(Request $request) {
         $validator = Validator::make($request->all(),[
@@ -73,6 +84,28 @@ class MachineController extends Controller
             'machine_prgid' => $request->prgId
         ]))
             return response('기기 변경 실패', 403);
+
+        $setting = SettingModel::where([
+            'setting_prgid' => $request->prgId,
+            'setting_type' => 'temperature'
+        ])->get();
+        $tempsetting = SettingModel::where([
+            'setting_prgid' => $request->prgId,
+            'setting_type' => 'humidity'
+        ])->get();
+        $i = 0;
+
+        foreach($setting as $data){
+            SettingModel::where('id', '=', $data->id)->update([
+               'setting_date' => Carbon::now()->addDay($i++)
+            ]);
+        }
+        $i = 0;
+        foreach($tempsetting as $data){
+            SettingModel::where('id', '=', $data->id)->update([
+                'setting_date' => Carbon::now()->addDay($i++)
+            ]);
+        }
 
         return response('성공', 201);
     }
@@ -180,9 +213,13 @@ class MachineController extends Controller
             "machine_userid" => 1
         ]);
 
-        UserModel::where('id', '=', $userId)->update([
-            'user_machineid' => 0
-        ]);
+        $machineId = UserModel::where('id', '=', $machine->first()->id)
+            ->first()->user_machineid;
+
+        if($machineId != $request->id)
+            UserModel::where('id', '=', $userId)->update([
+               'user_machineid' => 0
+            ]);
 
         if(!$result)
             return response('삭제 실패', 403);
@@ -204,7 +241,9 @@ class MachineController extends Controller
             ->join('Pins', 'Machines.machine_pin', '=', 'Pins.pin_value')
             ->where('Pins.pin_value', '=', $request->pin)->first();
 
-        $user = UserModel::where('user_id', '=', $request->userId)->first();
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)->first();
+
         if(!$user)
             return response("해당 유저가 없습니다", 404);
         if($result->pin_pw != $request->pw)
@@ -231,7 +270,7 @@ class MachineController extends Controller
 
         $machine = MachineModel::select('Programs.id', 'Programs.prg_name')
             ->join('Programs', 'Machines.machine_prgid', '=', 'Programs.id')
-            ->where('Machines.id', '=', $request->input('id'));
+            ->where('Machines.id', '=', $request->id);
 
         if($machine->count() == 0)
             return response('해당 데이터가 없습니다.', 404);
@@ -242,13 +281,14 @@ class MachineController extends Controller
     function GetMachineList(Request $request)
     {
         $validator = Validator::make($request->all(),[
-            "userId" => "required"
+            "token" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $user = UserModel::where('user_id', '=', $request->userId)->first();
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)->first();
 
         if($user == null)
             return response('해당 유저가 없습니다.', 404);
@@ -259,5 +299,36 @@ class MachineController extends Controller
             return response("해당 데이터가 없습니다.", 404);
 
         return response($machine->get(), 200);
+    }
+
+    function SetMachineIP(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "id" => "required",
+            "ip" => "required"
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        // 기기 체크
+        $machine = MachineModel::where('id', '=', $request->id);
+        // 없으면 예외
+        if($machine->count() == 0)
+            return response('해당 기기가 없습니다.', 404);
+
+        if($machine->first()->machine_ip != null)
+            return response('이미 아이피가 등록되었습니다', 402);
+        else {
+            $result = $machine->update([
+                'machine_ip' => $request->ip
+            ]);
+
+            if(!$result)
+                return response('변경에 실패하였습니다.', 403);
+        }
+
+        return response('변경 성공', 200);
+        // 기기 아이피 NULL이면 설정
+
     }
 }
