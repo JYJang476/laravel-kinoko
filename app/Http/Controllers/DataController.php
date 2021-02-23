@@ -22,7 +22,7 @@ class DataController extends Controller
         $tempArray = DataModel::select('value', 'date')->whereRaw(
             'type="temperature" and prgid=? and date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [
             $request->prgId,
-            $request->date])->orderBy('setting_date')->get();
+            $request->date])->orderBy('date')->get();
 
         $humiArray = DataModel::select('value', 'date')->whereRaw(
             'type="humidity" and prgid=? and date >= date_format(?, "%Y-%m-%d %H:%i:%S")', [

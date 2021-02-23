@@ -49,8 +49,7 @@ Route::get('machine/test', 'MachineController@MachineTest');
 Route::get('pin/check', 'PinController@CheckPin');
 Route::get('pin/auth', 'PinController@AuthPin');
 
-
-Route::put('myfarm/ip', 'MachineController@SetMachineIP');
+Route::put('myfarm/register/ip', 'MachineController@SetMachineIP');
 
 Route::get('myfarm/data/hour', 'DataController@GetDataToHour');
 Route::get('farm/logout/list', 'DataController@GetDataToLastlogout');
@@ -65,9 +64,25 @@ Route::put('logout', 'UserController@LogoutUser');
 Route::get('logout/date', 'UserController@GetLogoutDate');
 
 Route::get('farm/exist', 'MachineController@IsExist');
-Route::put('myfarm/ip', 'MachineController@SetMachineIP');
+Route::put('myfarm/register/ip', 'MachineController@SetMachineIP');
 
+// 버섯 이미지 -----------
 Route::post('image/upload', 'MushroomImageController@UploadImage');
 Route::get('img/{id}', 'MushroomImageController@GetImage');
+// ------------
+
+// 도움말 -----------
+Route::get('list/help', 'HelpController@GetHelpList');
+Route::get('help/{id}', 'HelpController@GetHelpData');
+Route::post('upload/help', 'HelpImageController@UploadImage');
+Route::get('help/image/{id}', 'HelpImageController@GetImage');
+// -------------
+
+// 배지 이미지
+Route::get('compost/image/cluster/{page}/{id}', 'CompostImageController@GetImageClusterList');
+Route::get('compost/{id}', 'CompostImageController@GetImage');
+Route::post('upload/compost', 'CompostImageController@UploadImage');
+// 배지 이미지
+
 
 

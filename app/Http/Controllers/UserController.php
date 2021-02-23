@@ -65,7 +65,8 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::where('token', '=', $request->token)
+        $result = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
+            ->where('token', '=', $request->token)
             ->update([
                 'user_machineid' => $request->id
             ]);
