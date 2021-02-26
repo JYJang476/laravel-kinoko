@@ -21,13 +21,6 @@ class MushroomController extends Controller
             'mr_size' => 0,
             'mr_imgid' => 0
         ]);
-
-//        $mushroom = MushroomModel::all()->last()->get();
-
-//        MushRoomImageModel::insert([
-//            'mushimg_mrid' => $mushroom->id,
-//            'mushimg_url' => "/image/".$mushroom->id
-//        ]);
     }
 
     public function GetMushRoomAll(Request $request) {
@@ -39,7 +32,7 @@ class MushroomController extends Controller
             return response($validator->errors(), 400);
 
         $mushroom = MushroomModel::where('mr_prgid', '=', $request->prgId);
-        
+
         if($mushroom->count() == 0)
             return response('해당 데이터를 찾지 못했습니다.', 404);
 

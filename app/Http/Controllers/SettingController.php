@@ -36,7 +36,7 @@ class SettingController extends Controller
             "humidity" => $humiArray
         ], 200);
     }
-
+    // 시간 단위로 데이터를 받아온다.
     function GetDataToHour(Request $request) {
         $validator = Validator::make($request->all(),[
             "prgId" => "required",

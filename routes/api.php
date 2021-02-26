@@ -28,7 +28,7 @@ Route::get('farm/custom/list', 'ProgramController@CustomList');
 Route::get('farm/data', 'ProgramController@GetGraphData');
 Route::put('farm/compostname', 'ProgramController@SetCompostName');
 Route::get('farm/compostname', 'ProgramController@GetCompostName');
-Route::put('farm/period', 'ProgramController@ExtendCustomPeriod');
+Route::put('farm/period/extend', 'ProgramController@ExtendCustomPeriod');
 Route::delete('farm', 'ProgramController@DeleteCustomProgram');
 Route::get('farm/startdate', 'ProgramController@GetStartDate');
 
@@ -84,5 +84,9 @@ Route::get('compost/{id}', 'CompostImageController@GetImage');
 Route::post('upload/compost', 'CompostImageController@UploadImage');
 // 배지 이미지
 
+// 3D 데이터
+Route::get('ply/{id}', 'PlyController@GetFile');
+Route::post('upload/ply', 'PlyController@UploadFile');
+// 3D 데이터
 
 

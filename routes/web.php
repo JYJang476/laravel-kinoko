@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('CopyDBData');
 });
 
-Route::get('/hello', function () {
+Route::get('/CopyDBData', function () {
     return view('welcome');
 });
 

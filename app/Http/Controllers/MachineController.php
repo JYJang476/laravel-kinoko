@@ -17,7 +17,11 @@ use Validator;
 
 class MachineController extends Controller
 {
+    // 목적: 새로운 기기를 추가한다.
+    // 파라미터 : 1. pin - 등록된 핀번호
+    //          2. pw  - 핀번호의 패스워드
     function AddMachine(Request $request) {
+        // 파라미터의 유효성 검사
         $validator = Validator::make($request->all(),[
             "pin" => "required",
             "pw" => "required",
@@ -26,27 +30,28 @@ class MachineController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
+        // 새로운 기기를 추가한다.
         $result = MachineModel::insert([
             'machine_userid' => 1,
             'machine_prgid' => 0,
             'machine_pin' => $request->pin,
             'machine_name' => ""
         ]);
-
+        // 추가 실패 시 에러 반환
         if(!$result)
             return response("기기 추가 실패", 403);
-
+        // 추가한 요소의 ID값을 가져온다.
         $insertMachineId = MachineModel::all()->last()->id;
-
+        // 핀 테이블에 새로운 핀 추가
         $result = PinModel::insert([
             'pin_value' => $request->pin,
             'pin_machineid' => $insertMachineId,
             'pin_pw' => $request->pw
         ]);
-
+        // 실패시 에러 반환
         if(!$result)
             return response("핀 번호 추가 실패", 403);
-
+        // 성공 반환
         return response("성공", 201);
     }
 
@@ -193,15 +198,7 @@ class MachineController extends Controller
     }
 
     function MachineTest(Request $request) {
-        $request->validate([
-            "id" => "required"
-        ]);
-//        return $result->;
-//        $userId = UserModel::where('user_id', '=', $request->userId)->first()->id;
-//
-//        $machine = MachineModel::where('machine_userid', '=', $userId)->get();
-//
-//        return response($machine->toArray(), 200);
+        return response([ "token" => $request->cookie("token")]);
     }
 
     function DeleteMachine(Request $request) {
@@ -228,15 +225,15 @@ class MachineController extends Controller
     }
 
     function RegisterMachine(Request $request) {
-//        $validator = Validator::make($request->all(),[
-//            "pin" => "required",
-//            "pw" => "required",
-//            "name" => "required",
-//            "userId" => "required"
-//        ]);
-//
-//        if($validator->fails())
-//            return response($validator->errors(), 400);
+        $validator = Validator::make($request->all(),[
+            "pin" => "required",
+            "pw" => "required",
+            "machineName" => "required",
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
         $result = MachineModel::select('Machines.machine_userid', 'Pins.pin_value', 'Pins.pin_pw')
             ->join('Pins', 'Machines.machine_pin', '=', 'Pins.pin_value')
             ->where('Pins.pin_value', '=', $request->pin)->first();
@@ -316,19 +313,12 @@ class MachineController extends Controller
         if($machine->count() == 0)
             return response('해당 기기가 없습니다.', 404);
 
-        if($machine->first()->machine_ip != null)
-            return response('이미 아이피가 등록되었습니다', 402);
-        else {
-            $result = $machine->update([
-                'machine_ip' => $request->ip
-            ]);
+        $result = $machine->update([
+            'machine_ip' => $request->ip
+        ]);
 
-            if(!$result)
-                return response('변경에 실패하였습니다.', 403);
-        }
-
+        if(!$result)
+            return response('변경에 실패하였습니다.', 403);
         return response('변경 성공', 200);
-        // 기기 아이피 NULL이면 설정
-
     }
 }

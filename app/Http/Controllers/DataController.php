@@ -9,6 +9,30 @@ use Validator;
 
 class DataController extends Controller
 {
+    function AddData(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "prgId" => "required",
+            "value" => "required",
+            "type" => "required"
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        DataModel::insert([
+            'prgid' => $request->prgid,
+            'value' => $request->value[0],
+            'type' => 'temperature',
+        ]);
+        DataModel::insert([
+            'prgid' => $request->prgid,
+            'value' => $request->value[1],
+            'type' => 'humidity',
+        ]);
+
+        return respnse('성공', 200);
+    }
+
     function GetDataToLastlogout(Request $request) {
         $validator = Validator::make($request->all(),[
             "prgId" => "required",

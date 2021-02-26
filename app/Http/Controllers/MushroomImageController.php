@@ -32,12 +32,13 @@ class MushroomImageController extends Controller
                         ->join('Dates', 'Programs.prg_dateid', 'Dates.id')
                         ->where('Programs.id', '=', $mush->mr_prgid)->first();
 
-        $diffDay = Carbon::createFromFormat('Y-m-d H:i:s', $programs->date_start)->diffInDays(Carbon::now());
+        $nowDate = Carbon::now()->addHour(9);
+        $diffDay = Carbon::createFromFormat('Y-m-d H:i:s', $programs->date_start)->diffInDays($nowDate);
 
         $result = MushRoomImageModel::insert([
             'mushimg_mrid' => $request->mushroomId,
             'mushimg_url' => $path,
-            'mushimg_date' => 3 // 나중에 $diffDay로 교체(지금은 임시값)
+            'mushimg_date' => $diffDay // 나중에 $diffDay로 교체(지금은 임시값)
         ]);
 
         if(!$result)

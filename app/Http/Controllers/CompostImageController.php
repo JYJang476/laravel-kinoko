@@ -17,7 +17,7 @@ class CompostImageController extends Controller
     public function GetImage($id) {
         $compostImage = CompostImageModel::where('id', $id)->first();
 
-        if($compostImage == null)
+        if($compostImage == null || $compostImage->compostimg_url == null)
             return response('파일 없음', 404);
 
         return Storage::get($compostImage->compostimg_url);
@@ -53,6 +53,7 @@ class CompostImageController extends Controller
         $path = $request->file('compost')->store('compost');
 
         $user = UserModel::where('user_machineid', '=', $request->machineid)->first();
+        
         if($user == null)
             return response('해당 기기가 등록된 계정을 찾을 수 없습니다.', 404);
 

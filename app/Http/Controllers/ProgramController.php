@@ -107,9 +107,9 @@ class ProgramController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        if(!ProgramModel::update([
+        if(!ProgramModel::where('id', '=', $request->id)->update([
             'prg_compostname' => $request->name
-        ])->where('id', '=', $request->id))
+        ]))
             return response('변경 실패', 403);
 
         return response('변경 성공', 200);
@@ -171,11 +171,13 @@ class ProgramController extends Controller
         ]);
         // 예외 처리
         if(!$result)
-            return response('실패', 402);
+            return response('실패', 403);
 
         $insertProgramId = ProgramModel::all()->last()->id;
         // 재배 기간 만큼 빈 데이터 추가
         for($i = 0; $i < $request->period; $i++) {
+            if(ProgramModel::where('id', '=', $insertProgramId)->first() == null)
+                return response('실패', 403);
             // 온도
             SettingModel::insert([
                 'setting_prgid' => $insertProgramId,
@@ -212,41 +214,46 @@ class ProgramController extends Controller
         if(!$result)
             return response('해당 데이터 없음', 404);
 
-        return response($result->first()->prg_compostname, 200);
+        return response($result->prg_compostname, 200);
     }
 
     public function ExtendCustomPeriod(Request $request) {
         // 기간, 기간분의 데이터(Array), 프로그램 id, 유저 id
         $validator = Validator::make($request->all(),[
             "id" => "required",
-            "value" => "required",
-            "tempDate" => "required",
-            "humiDate" => "required",
-            "period" => "required"
+            "temps" => "required",
+            "humis" => "required",
+            "period" => "required",
+            "water" => "required",
+            "sunshine" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $token = $request->cookie('token');
+        $token = $request->token;
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
             ->where('token', '=', $token)->first();
 
+        $program = ProgramModel::where('id', '=', $request->id)->first();
+
+        $nowDate = Carbon::now()->addHour(9);
         for($i = 0; $i < $request->period; $i++) {
+            $insertDate = $nowDate->addDay($i)->format('Y-m-d H:i:s');
             // 온도
             SettingModel::insert([
                 'setting_prgid' => $request->id,
-                'setting_value' => $request->value,
+                'setting_value' => $request->temps[$i],
                 'setting_type' => 'temperature',
-                'setting_date' => $request->tempDate[$i],
+                'setting_date' => $insertDate,
             ]);
             // 습도
             SettingModel::insert([
                 'setting_prgid' => $request->id,
-                'setting_value' => $request->value,
+                'setting_value' => $request->humis[$i],
                 'setting_type' => 'humidity',
-                'setting_date' => $request->humiDate[$i],
+                'setting_date' => $insertDate,
             ]);
             // 생장률
             GrowthRateModel::insert([
@@ -257,7 +264,9 @@ class ProgramController extends Controller
         }
 
         $result = ProgramModel::where('id', $request->id)->update([
-            'prg_period' => $request->period
+            'prg_period' => $program->prg_period + $request->period,
+            'prg_water' => $request->water,
+            'prg_sunshine' => $request->sunshine
         ]);
 
         if(!$result)
