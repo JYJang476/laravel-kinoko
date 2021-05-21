@@ -294,24 +294,4 @@ class ProgramController extends Controller
 
         return response('성공', 200);
     }
-
-    public function getProgramData($id) {
-        # 이름
-        # 하루 당 온습도
-        # 재배기간
-        # 물주기
-        # 햇빛
-        # 날짜당 생장률
-        # 날짜당 수확 버섯 수
-        # 수확한 버섯 수
-        # 시작, 종료날짜
-
-    }
-
-    // param : 날짜 당 온/습도(Array), 물주기, 햇빛, 재배기간, 프로그램 이름
-    public function AddProgramData(Request $request) {
-
-    }
-
-
 }
