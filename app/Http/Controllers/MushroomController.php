@@ -11,6 +11,8 @@ class MushroomController extends Controller
     public function AddMushRoom(Request $request) {
         $validator = Validator::make($request->all(),[
             "prgId" => "required",
+            "size" => "required",
+            "metaJSON" => "required"
         ]);
 
         if($validator->fails())
@@ -18,9 +20,33 @@ class MushroomController extends Controller
 
         MushroomModel::insert([
             'mr_prgid' => $request->prgId,
-            'mr_size' => 0,
-            'mr_imgid' => 0
+            'mr_size' => $request->size,
+            'mr_imgid' => 0,
+            'mr_metadata' => $request->metaJSON
         ]);
+
+        return response('성공', 200);
+    }
+
+    public function SetMushroomSize(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "id" => "required",
+            "value" => "required"
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        $mush = MushroomModel::where('id', '=', $request->id);
+
+        if($mush->count() == 0)
+            return response('버섯이 없습니다.', 404);
+
+        $mush->update([
+            'mr_size' => $request->value
+        ]);
+
+        return response('성공', 200);
     }
 
     public function GetMushRoomAll(Request $request) {
@@ -60,7 +86,6 @@ class MushroomController extends Controller
 
     public function GetMushForStatus($prgId, $status='growing')
     {
-
         $mushrooms = MushroomModel::where([
             'mr_status' => $status,
             'mr_prgid' => $prgId

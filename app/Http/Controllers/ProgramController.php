@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 
 class ProgramController extends Controller
 {
-    # param : 종류,AddCustomProgram
     public function GetGraphData(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required",
@@ -29,7 +28,7 @@ class ProgramController extends Controller
 
         $table = ProgramModel::join('Setting_datas', 'Programs.id', '=', 'Setting_datas.setting_prgid')
             ->where([
-                'prg_type' => $request->type,
+                'Programs.prg_type' => $request->type,
                 'Programs.id' => $request->id
             ]);
 
@@ -129,7 +128,9 @@ class ProgramController extends Controller
         if($program == null)
             return response('해당 데이터를 찾지 못했습니다.', 404);
 
-        return response($program->date_start, 200);
+        if($program->date_start == null)
+            return response('아직 시작하지 않은 프로그램입니다.', 404);
+            return response($program->date_start, 200);
     }
 
     public function AddCustomProgram(Request $request) {
@@ -148,7 +149,11 @@ class ProgramController extends Controller
         $machine = MachineModel::where('id', $request->machineId)->first();
 
         if($machine == null)
-            return response("not found", 401);
+            return response("자료 없음", 401);
+
+        if($machine->machine_userid == 0)
+            return response("등록되지 않은 기기의 환경 추가입니다.", 403);
+
         // 기간 만큼 빈 날짜 데이터 추가
         DateModel::insert([
             'date_userid' => $machine->machine_userid
@@ -234,7 +239,7 @@ class ProgramController extends Controller
         $token = $request->token;
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $token)->first();
+            ->where('token.token', '=', $token)->first();
 
         $program = ProgramModel::where('id', '=', $request->id)->first();
 
@@ -294,24 +299,4 @@ class ProgramController extends Controller
 
         return response('성공', 200);
     }
-
-    public function getProgramData($id) {
-        # 이름
-        # 하루 당 온습도
-        # 재배기간
-        # 물주기
-        # 햇빛
-        # 날짜당 생장률
-        # 날짜당 수확 버섯 수
-        # 수확한 버섯 수
-        # 시작, 종료날짜
-
-    }
-
-    // param : 날짜 당 온/습도(Array), 물주기, 햇빛, 재배기간, 프로그램 이름
-    public function AddProgramData(Request $request) {
-
-    }
-
-
 }

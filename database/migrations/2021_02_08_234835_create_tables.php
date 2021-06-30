@@ -98,7 +98,37 @@ class CreateTables extends Migration
 //            $table->integer("setting_value");
 //            $table->string("setting_type", 12);
 //            $table->timestamp("setting_date")->nullable();
-//            $table->foreign("setting_prgid")->references('id')->on('Users')->onDelete('cascade');
+//            $table->foreign("setting_prgid")->references('id')->on('Programs')->onDelete('cascade');
+//        });
+//
+//        Schema::create('token', function (Blueprint $table) {
+//            $table->increments('id');
+//            $table->integer('user_no')->unsigned();
+//            $table->timestamp('date')->useCurrent();
+//            $table->string('token', 60);
+//            $table->foreign('user_no')->references('id')->on('Users')->onDelete('cascade');
+//        });
+//
+//        Schema::create('Help', function (Blueprint $table) {
+//            $table->id();
+//            $table->string("name", 20);
+//            $table->string("effect", 500);
+//            $table->string("environment", 500);
+//            $table->string("thumnail_url", 200)->nullable();
+//            $table->timestamp("date")->useCurrent();
+//        });
+//
+//        Schema::create('help_image', function (Blueprint $table) {
+//            $table->id();
+//            $table->string("url");
+//            $table->timestamp("date")->useCurrent();
+//        });
+//
+//        Schema::create('3ddata', function (Blueprint $table) {
+//            $table->id();
+//            $table->string('url', 50);
+//            $table->integer('machineid')->unique();
+//            $table->timestamp('date')->useCurrent();
 //        });
     }
 

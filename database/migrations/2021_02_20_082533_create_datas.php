@@ -13,13 +13,13 @@ class CreateDatas extends Migration
      */
     public function up()
     {
-        Schema::create('Datas', function (Blueprint $table) {
-            $table->id();
-            $table->integer('prgid');
-            $table->integer('value');
-            $table->string('type', 12);
-            $table->timestamp('date')->useCurrent();
-        });
+//        Schema::create('Datas', function (Blueprint $table) {
+//            $table->id();
+//            $table->integer('prgid');
+//            $table->integer('value');
+//            $table->string('type', 12);
+//            $table->timestamp('date')->useCurrent();
+//        });
     }
 
     /**

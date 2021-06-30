@@ -11,28 +11,33 @@ class insert_data extends Seeder
      */
     public function run()
     {
-        $date = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', '2020-12-06 05:58:11');
-
-        $endDate = clone $date;
-        $endDate = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', '2020-12-12 05:58:11');
-
-        while($date->day < $endDate->day){
-            $date->addHour(1);
+//        for($i = 3; $i < 8; $i++) {
+//            $pin = random_int(100000, 200000);
+//            DB::table('Machines')->insert([
+//                'machine_userid' => 0,
+//                'machine_prgid' => 0,
+//                'machine_pin' => $pin
+//            ]);
+//
+//            DB::table('Pins')->insert([
+//                'pin_value' => $pin,
+//                'pin_machineid' => $i,
+//                'pin_pw' => "1234"
+//            ]);
+//        }
+        for($i = 0; $i < 10; $i++) {
             DB::table('Datas')->insert([
-                'prgid' => 9,
-                'value' => random_int(15, 35),
+                'prgid' => 55,
+                'value' => random_int(20, 30),
                 'type' => 'temperature',
-                'date' => $date
+                'date' => \Carbon\Carbon::now()->addHour($i)
             ]);
-
             DB::table('Datas')->insert([
-                'prgid' => 9,
-                'value' => random_int(15, 35),
+                'prgid' => 55,
+                'value' => random_int(70, 80),
                 'type' => 'humidity',
-                'date' => $date
+                'date' => \Carbon\Carbon::now()->addHour($i)
             ]);
         }
-
-    
     }
 }

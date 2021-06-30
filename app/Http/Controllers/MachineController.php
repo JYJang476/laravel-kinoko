@@ -17,7 +17,7 @@ use Validator;
 
 class MachineController extends Controller
 {
-    // 목적: 새로운 기기를 추가한다.
+    // 목적: 새로운 기기를 추가 한다.
     // 파라미터 : 1. pin - 등록된 핀번호
     //          2. pw  - 핀번호의 패스워드
     function AddMachine(Request $request) {
@@ -55,6 +55,8 @@ class MachineController extends Controller
         return response("성공", 201);
     }
 
+    // 목적: 핀 번호가 존재하는지 조회한다.
+    // 파라미터 : 1. pin - 조회할 핀번호
     public function IsExist(Request $request) {
         $result = MachineModel::where('machine_pin', '=', $request->pin)->first();
 
@@ -64,7 +66,9 @@ class MachineController extends Controller
         return response($result->machine_prgid, 200);
     }
 
-    // 기기의 사용 프로그램 설정
+    // 목적: 기기의 사용 프로그램을 설정한다.
+    // 파라미터 : 1. id - 대상 기기 ID
+    //          2. pw  - 핀번호의 패스워드
     function SetProgram(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required",
@@ -111,11 +115,21 @@ class MachineController extends Controller
                 'setting_date' => Carbon::now()->addDay($i++)
             ]);
         }
+        // 시작시간 설정
+        ProgramModel::select('Programs.id', 'Dates.date_start')
+            ->join('Dates', 'Dates.id', 'Programs.prg_dateid')
+            ->where('Programs.id', '=', $request->prgId)
+            ->update([
+               'date_start' => Carbon::now()->format('Y-m-d H:i:s')
+            ]);
 
         return response('성공', 201);
     }
 
     // 가동 상태 설정
+    // 목적: 기기의 가동상태를 설정한다.
+    // 파라미터 : 1. id - 대상 기기 ID
+    //          2. status - 설정할 상태값(true : 가동, false : 비가동)
     function SetIsOn(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required",
@@ -137,6 +151,9 @@ class MachineController extends Controller
     }
 
     // 배지 유무 설정
+    // 목적: 기기 안에 있는 배지의 유무를 설정한다.
+    // 파라미터 : 1. id - 대상 기기 ID
+    //          2. status - 배지의 존재유무 (true : 있음, false : 없음)
     function SetIsPresence(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required",
@@ -157,7 +174,8 @@ class MachineController extends Controller
         return response('성공', 200);
     }
 
-    // 가동 상태 설정
+    // 목적: 기기의 가동상태를 얻어온다.
+    // 파라미터 : 1. id - 대상 기기 ID
     function GetIsOn(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required"
@@ -178,6 +196,8 @@ class MachineController extends Controller
     }
 
     // 배지 유무 설정
+    // 목적: 기기의 배지 유무를 가져온다.
+    // 파라미터 : 1. id - 대상 기기 ID
     function GetIsPresence(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required"
@@ -197,26 +217,39 @@ class MachineController extends Controller
         return response($result->machine_ispresence, 200);
     }
 
-    function MachineTest(Request $request) {
-        return response([ "token" => $request->cookie("token")]);
-    }
-
+    // 목적: 기기를 목록에서 삭제한다.
+    // 파라미터 : 1. id - 대상 기기 ID
     function DeleteMachine(Request $request) {
-        $machine = MachineModel::where('id', $request->id);
-
-        $userId = $machine->first()->machine_userid;
-
-        $result = $machine->update([
-            "machine_userid" => 1
+        $validator = Validator::make($request->all(),[
+            "id" => "required",
         ]);
 
-        $machineId = UserModel::where('id', '=', $machine->first()->id)
-            ->first()->user_machineid;
+        if($validator->fails())
+            return response($validator->errors(), 400);
+        // 해당 id를 가진 기기를 찾는다.
+        $machine = MachineModel::where('id', $request->id);
+        // 찾는 기기가 없으면 에러 반환
+        if($machine->count() == 0)
+            return response('해당 기기 없음', 200 );
+        // 해당 기기를 소유하는 사용자 id를 가져온다.
+        $userId = $machine->first()->machine_userid;
 
-        if($machineId != $request->id)
-            UserModel::where('id', '=', $userId)->update([
-               'user_machineid' => 0
-            ]);
+//        $machineId = UserModel::where('id', '=', $userId)
+//            ->first()->user_machineid;
+
+        //if($machineId != $request->id)
+        UserModel::where('id', '=', $userId)->update([
+           'user_machineid' => 0
+        ]);
+
+        $result = $machine->update([
+            'machine_userid' => 0,
+            'machine_ison' => 'false',
+            'machine_ip' => null,
+            'machine_ispresence' => 'false',
+            'machine_name' => '',
+            'machine_prgid' => 0
+,        ]);
 
         if(!$result)
             return response('삭제 실패', 403);
@@ -224,11 +257,16 @@ class MachineController extends Controller
         return response('삭제 성공', 200);
     }
 
+    // 목적: 새로운 기기를 등록한다.
+    // 파라미터 : 1. id - 대상 기기 ID
+    //          2. pw  - 핀번호의 패스워드
+    //          3. machineName  - 설정할 기기의 이름
     function RegisterMachine(Request $request) {
         $validator = Validator::make($request->all(),[
             "pin" => "required",
             "pw" => "required",
             "machineName" => "required",
+            "token" => "required"
         ]);
 
         if($validator->fails())
@@ -239,13 +277,13 @@ class MachineController extends Controller
             ->where('Pins.pin_value', '=', $request->pin)->first();
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)->first();
+            ->where('token.token', '=', $request->token)->first();
 
-        if(!$user)
+        if(!$user || !$result)
             return response("해당 유저가 없습니다", 404);
         if($result->pin_pw != $request->pw)
             return response("비밀번호 인증 실패", 401);
-        if($result->machine_userid != 1)
+        if($result->machine_userid != 0)
             return response('이미 등록된 기기', 404);
 
         MachineModel::where('machine_pin', '=', $request->pin)->update([
@@ -256,6 +294,8 @@ class MachineController extends Controller
         return response($result->machine_ip, 200);
     }
 
+    // 목적: 해당 기기의 이름, 온도, 습도, 생장률, 배지이름 등을 가져온다.
+    // 파라미터 : 1. id - 대상 기기 ID
     function GetMachine(Request $request) {
         // 프로그램 이름, 온/습/생장, 배지 이름,
         $validator = Validator::make($request->all(),[
@@ -275,6 +315,8 @@ class MachineController extends Controller
         return response($machine->get()->toArray(), 200);
     }
 
+    // 목적: 기기의 목록을 가져온다.
+    // 파라미터 : 1. token - 조회할 계정의 현재 토큰
     function GetMachineList(Request $request)
     {
         $validator = Validator::make($request->all(),[
@@ -285,7 +327,7 @@ class MachineController extends Controller
             return response($validator->errors(), 400);
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)->first();
+            ->where('token.token', '=', $request->token)->first();
 
         if($user == null)
             return response('해당 유저가 없습니다.', 404);
@@ -298,6 +340,9 @@ class MachineController extends Controller
         return response($machine->get(), 200);
     }
 
+    // 목적: 기기 아이피를 설정한다.
+    // 파라미터 : 1. id - 대상 기기 ID
+    //          2. ip  - 설정할 ip
     function SetMachineIP(Request $request) {
         $validator = Validator::make($request->all(),[
             "id" => "required",
@@ -317,8 +362,6 @@ class MachineController extends Controller
             'machine_ip' => $request->ip
         ]);
 
-        if(!$result)
-            return response('변경에 실패하였습니다.', 403);
         return response('변경 성공', 200);
     }
 }

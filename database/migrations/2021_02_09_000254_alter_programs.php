@@ -13,9 +13,9 @@ class AlterPrograms extends Migration
      */
     public function up()
     {
-        Schema::table('Programs', function (Blueprint $table) {
-            $table->foreign("prg_userid")->references('id')->on('Users')->onDelete('cascade');
-        });
+//        Schema::table('Programs', function (Blueprint $table) {
+//            $table->foreign("prg_userid")->references('id')->on('Users')->onDelete('cascade');
+//        });
     }
 
     /**

@@ -13,13 +13,13 @@ class CreateTokenTable extends Migration
      */
     public function up()
     {
-        Schema::create('token', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('user_no')->unsigned();
-            $table->timestamp('date')->useCurrent();
-            $table->string('token', 60);
-            $table->foreign('user_no')->references('id')->on('Users')->onDelete('cascade');
-        });
+//        Schema::create('token', function (Blueprint $table) {
+//            $table->increments('id');
+//            $table->integer('user_no')->unsigned();
+//            $table->timestamp('date')->useCurrent();
+//            $table->string('token', 60);
+//            $table->foreign('user_no')->references('id')->on('Users')->onDelete('cascade');
+//        });
     }
 
     /**

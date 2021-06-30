@@ -14,8 +14,7 @@ class setting_1hour extends Seeder
         $baseDate = \Carbon\Carbon::createFromFormat("Y-m-d H:i:s","2020-12-06 00:58:11");
         $endDate = clone $baseDate;
         $endDate = $endDate->addDay(5)->addHour(17);
-
-
+        
         while($baseDate->day < $endDate->day){
             $baseDate->addHour(1);
             DB::table('Setting_datas')->insert([
@@ -32,6 +31,5 @@ class setting_1hour extends Seeder
                 'setting_date' => $baseDate
             ]);
         }
-
     }
 }

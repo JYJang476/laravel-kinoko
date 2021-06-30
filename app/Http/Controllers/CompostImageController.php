@@ -47,13 +47,12 @@ class CompostImageController extends Controller
         return response($result, 200);
     }
 
-
     public function UploadImage(Request $request) {
 
         $path = $request->file('compost')->store('compost');
 
         $user = UserModel::where('user_machineid', '=', $request->machineid)->first();
-        
+
         if($user == null)
             return response('해당 기기가 등록된 계정을 찾을 수 없습니다.', 404);
 

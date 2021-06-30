@@ -13,12 +13,12 @@ class Create3DData extends Migration
      */
     public function up()
     {
-        Schema::create('3ddata', function (Blueprint $table) {
-            $table->id();
-            $table->string('url', 50);
-            $table->integer('machineid')->unique();
-            $table->timestamp('date')->useCurrent();
-        });
+//        Schema::create('3ddata', function (Blueprint $table) {
+//            $table->id();
+//            $table->string('url', 50);
+//            $table->integer('machineid')->unique();
+//            $table->timestamp('date')->useCurrent();
+//        });
     }
 
     /**

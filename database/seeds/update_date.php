@@ -15,7 +15,9 @@ class update_date extends Seeder
             'setting_prgid' => 30,
             'setting_type' => 'humidity'
         ])->get();
+        
         $i = 0;
+
         foreach($datas as $data) {
             DB::table('Setting_datas')->where('id', '=', $data->id)->update([
                 'setting_date' => \Carbon\Carbon::now()->addDay($i++)

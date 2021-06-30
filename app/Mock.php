@@ -4,12 +4,12 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PlyModel extends Model
+class Mock extends Model
 {
-    protected $table = '3ddata';
+    protected $table = 'mock';
     public $timestamps = false;
     protected $primaryKey = "id";
     protected $fillable = [
-        'url', 'machineid', 'date'
+        'url', 'date'
     ];
 }

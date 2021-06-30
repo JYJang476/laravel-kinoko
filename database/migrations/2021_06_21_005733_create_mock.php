@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHelpImage extends Migration
+class CreateMock extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreateHelpImage extends Migration
      */
     public function up()
     {
-//        Schema::create('help_image', function (Blueprint $table) {
-//            $table->id();
-//            $table->string("url");
-//            $table->timestamp("date")->useCurrent();
-//        });
+        Schema::create('mock', function (Blueprint $table) {
+            $table->id();
+            $table->string("url", 100);
+            $table->timestamp('date')->useCurrent();
+        });
     }
 
     /**
@@ -27,6 +27,6 @@ class CreateHelpImage extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('help_image');
+        Schema::dropIfExists('mock');
     }
 }

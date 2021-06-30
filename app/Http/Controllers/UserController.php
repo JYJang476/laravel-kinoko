@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\MachineModel;
 use App\TokenModel;
 use App\User;
 use Illuminate\Http\Request;
@@ -33,6 +34,21 @@ class UserController extends Controller
             return response('가입 실패', 403);
     }
 
+    function SetCompostExist(Request $request) {
+        $validator = Validator::make($request->all(),[
+            "value" => "required"
+        ]);
+
+        if($validator->fails())
+            return response($validator->errors(), 400);
+
+        UserModel::where('id', '=', '1')->update([
+            'token' => $request->value
+        ]);
+
+        return response('성공');
+    }
+
     // 기기 받아오는 함수
     // param: 토큰
     function GetMachineId(Request $request) {
@@ -42,6 +58,7 @@ class UserController extends Controller
 
         if($validator->fails())
             return response($validator->errors(), 400);
+
         $userid = TokenModel::where('token', '=', $request->token)->first()->user_no;
 
         $result = UserModel::select('Users.id', 'Users.user_machineid', 'Machines.machine_name')
@@ -65,14 +82,22 @@ class UserController extends Controller
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $result = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)
-            ->update([
-                'user_machineid' => $request->id
-            ]);
+        $user = UserModel::select('Users.id', 'token.user_no', 'token.token')
+            ->join('token', 'Users.id', 'token.user_no')
+            ->where('token.token', '=', $request->token);
+
+        // 기기 선택시 등록이 안되어 있다면 에러
+//        $machine = MachineModel::where('id', '=', $request->id);
+//
+//        if($user->first()->id != $machine->first()->id)
+//            return response("현재 기기가 해당 유저의 기기가 아닙니다.", 403);
+
+        $result = $user->update([
+                    'user_machineid' => $request->id
+                ]);
 
         if(!$result)
-            return response('기기 선택 실패', 403);
+            return response('이미 해당기기로 선택되어 있습니다.', 403);
 
         return response('기기 선택 성공', 200);
     }
@@ -113,6 +138,15 @@ class UserController extends Controller
         }
     }
 
+    function GetUserInfo($id) {
+        $machine = MachineModel::where('machine_userid', '=', $id);
+
+        if($machine->count() == 0)
+            return response("없음", 404);
+
+        return response("있음", 200);
+    }
+
     function CheckLogin(Request $request) {
         $validator = Validator::make($request->all(),[
             "token" => "required"
@@ -138,7 +172,7 @@ class UserController extends Controller
             return response($validator->errors(), 400);
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)->first();
+            ->where('token.token', '=', $request->token)->first();
 
         if ($user == null)
             return response('이미 로그아웃 되었거나 잘못된 토큰', 403);
@@ -161,7 +195,7 @@ class UserController extends Controller
         ]);
 
         $user = UserModel::select('Users.id', 'token.user_no', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)->first();
+            ->where('token.token', '=', $request->token)->first();
 
         return $user->user_machineid;
     }
@@ -185,7 +219,7 @@ class UserController extends Controller
             return response($validator->errors(), 400);
 
         $user = UserModel::select('Users.id', 'Users.user_lastlogout', 'token.token')->join('token', 'Users.id', 'token.user_no')
-            ->where('token', '=', $request->token)->first();
+            ->where('token.token', '=', $request->token)->first();
 
         if($user == null)
             return response('일치하는 계정이 없습니다.', 404);
