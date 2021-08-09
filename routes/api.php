@@ -84,11 +84,7 @@ Route::post('upload/compost', 'CompostImageController@UploadImage');
 // 3D 데이터
 Route::get('ply/{id}', 'PlyController@GetFile');
 Route::post('upload/ply', 'PlyController@UploadFile');
-Route::get('check/ply', 'PlyController@IsAccess');
 // 3D 데이터
-
-Route::get('mock/{id}', 'MockController@GetMock');
-Route::post('upload/mock', 'MockController@UploadMock');
 
 
 
