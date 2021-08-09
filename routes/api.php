@@ -39,6 +39,8 @@ Route::get('mushroom/{type}', 'MushroomController@GetMushRoom');
 Route::get('mushroom', 'MushroomController@GetMushRoomAll');
 Route::put('mushroom/size', 'MushroomController@SetMushroomSize');
 Route::post('mushroom/add', 'MushroomController@AddMushRoom');
+Route::put('mushroom/meta', 'MushroomController@SetMetadata');
+Route::get('rotation/mushroom', 'MushroomController@GetMushroomForRotation');
 
 // PIN 번호 관련 API
 Route::get('pin/check', 'PinController@CheckPin');
@@ -64,6 +66,7 @@ Route::put('myfarm/register/ip', 'MachineController@SetMachineIP');
 // 버섯 이미지 -----------
 Route::post('image/upload', 'MushroomImageController@UploadImage');
 Route::get('img/{id}', 'MushroomImageController@GetImage');
+Route::get('img/history/{id}', 'MushroomImageController@GetImageHistory');
 // ------------
 
 Route::put('compost/enable', 'UserController@SetCompostExist');
@@ -79,11 +82,12 @@ Route::get('help/image/{id}', 'HelpImageController@GetImage');
 Route::get('compost/image/cluster/{page}/{id}', 'CompostImageController@GetImageClusterList');
 Route::get('compost/{id}', 'CompostImageController@GetImage');
 Route::post('upload/compost', 'CompostImageController@UploadImage');
+Route::get('cluster/compost/{id}', 'PlyController@GetFileCluster');
 // 배지 이미지
 
 // 3D 데이터
-Route::get('ply/{id}', 'PlyController@GetFile');
-Route::post('upload/ply', 'PlyController@UploadFile');
+Route::get('realtime/compost/{id}', 'PlyController@GetFile');
+Route::post('upload/realtime/compost', 'PlyController@UploadFile');
 Route::get('check/ply', 'PlyController@IsAccess');
 // 3D 데이터
 

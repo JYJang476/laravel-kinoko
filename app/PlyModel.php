@@ -10,6 +10,6 @@ class PlyModel extends Model
     public $timestamps = false;
     protected $primaryKey = "id";
     protected $fillable = [
-        'url', 'machineid', 'date'
+        'url', 'machineid', 'date', 'rotation'
     ];
 }

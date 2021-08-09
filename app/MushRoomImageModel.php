@@ -10,7 +10,7 @@ class MushRoomImageModel extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'mushimg_mrid', 'mushimg_url', 'mushimg_date'
+        'mushimg_mrid', 'mushimg_url', 'mushimg_date', 'mrimg_date'
     ];
 
     public function mushrooms() {

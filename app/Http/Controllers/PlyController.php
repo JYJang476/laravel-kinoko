@@ -20,19 +20,22 @@ class  PlyController extends Controller
         if($user->token == "false")
             return response('허가나지 않음', 403);
 
-        $plyImage = PlyModel::where('machineid', $id);
+        $plyImage = PlyModel::where('id', '=', $id);
 
         if($plyImage == null)
             return response('파일 없음', 404);
 
         $responseData = Storage::get($plyImage->first()->url);
-        
-//        Storage::delete($plyImage->first()->url);
-//
-//        if(!$plyImage->delete())
-//            return response('파일 삭제 실패', 403);
 
         return response($responseData, 200);
+    }
+
+    public function GetFileCluster($id){
+        $ply = PlyModel::select(['id', 'machineid', 'rotation', 'date'])
+            ->where('machineid', '=', $id)
+            ->orderBy('id', 'desc')->limit(4)->get();
+
+        return response($ply->toArray());
     }
 
     public function IsAccess(Request $request) {
@@ -47,17 +50,19 @@ class  PlyController extends Controller
     public function UploadFile(Request $request) {
         // 파라미터의 유효성 검사
         $validator = Validator::make($request->all(),[
-            "machineid" => "required"
+            "machineid" => "required",
+            "rotation" => "required"
         ]);
 
         if($validator->fails())
             return response($validator->errors(), 400);
 
-        $path = $request->file('ply')->store('ply');
+        $path = $request->file('image')->store('ply');
 
         $result = PlyModel::insert([
             'machineid' => $request->machineid,
             'url' => $path,
+            'rotation' => $request->rotation
         ]);
 
         if(!$result)
